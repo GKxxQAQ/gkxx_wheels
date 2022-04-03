@@ -117,7 +117,7 @@ namespace __kmp {
         j = next[j];
       if (str[i] == pattern[j + 1])
         ++j;
-      if (j == pattern_size - 1) {
+      if (j + 1 == (int)pattern_size) {
         size_type start = i - pattern_size + 1;
         if (start >= last_pos) {
           result.emplace_back(start);
@@ -141,7 +141,7 @@ namespace __kmp {
         j = next[j];
       if (str[i] == pattern[j + 1])
         ++j;
-      if (j == pattern_size - 1) {
+      if (j + 1 == (int)pattern_size) {
         result.emplace_back(i - pattern_size + 1);
         j = next[j];
       }
