@@ -10,5 +10,6 @@ int main() {
     std::cout << strip("  abcdefghi   \n") << std::endl;
     std::cout << strip(str, {' ', '\n', 'a', 'h', 'i'})
               << std::endl;
+    std::cout << strip("\t", "\t\n") << std::endl;
     return 0;
 }

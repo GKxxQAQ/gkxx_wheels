@@ -15,7 +15,7 @@ std::string strip(const std::string &str, const Iterable &chars) {
     return std::find(std::begin(chars), std::end(chars), x) == std::end(chars);
   };
   auto last = std::find_if(str.rbegin(), str.rend(), not_in_chars).base();
-  auto first = std::find_if(str.begin(), str.end(), not_in_chars);
+  auto first = std::find_if(str.begin(), last, not_in_chars);
   return std::string(first, last);
 }
 
