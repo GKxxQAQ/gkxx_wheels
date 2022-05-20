@@ -1,6 +1,8 @@
 #ifndef GKXX_WHEEL_TYPE_NAME_HPP
 #define GKXX_WHEEL_TYPE_NAME_HPP
 
+#if __cplusplus >= 201703L
+
 #include <string_view>
 
 namespace gkxx {
@@ -31,5 +33,21 @@ constexpr auto get_type_name() {
 }
 
 } // namespace gkxx
+
+#else
+
+#include <boost/type_index.hpp>
+#include <string>
+
+namespace gkxx {
+
+template <typename T>
+inline std::string get_type_name() {
+  return boost::typeindex::type_id_with_cvr<T>().pretty_name();
+}
+
+} // namespace gkxx
+
+#endif // C++17
 
 #endif // GKXX_WHEEL_TYPE_NAME_HPP
