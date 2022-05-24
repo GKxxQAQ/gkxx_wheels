@@ -12,5 +12,8 @@ int main() {
   for (auto it = dir.begin(); it != dir.end(); ++it)
     std::cout << it->size() << " ";
   std::cout << std::endl;
+  for (auto name : gkxx::Directory("."))
+    std::cout << name << " ";
+  std::cout << std::endl;
   return 0;
 }
