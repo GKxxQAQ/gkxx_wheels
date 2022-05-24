@@ -10,7 +10,7 @@ namespace gkxx::mpl {
 // https://stackoverflow.com/questions/13830158/check-if-a-variable-type-is-iterable
 // Some modifications have been made to it.
 
-namespace __details {
+namespace detail {
 
   using std::begin;
   using std::end;
@@ -25,10 +25,10 @@ namespace __details {
   template <typename T>
   std::false_type is_iterable_impl(double);
 
-} // namespace __details
+} // namespace detail
 
 template <typename T>
-struct is_iterable : public decltype(__details::is_iterable_impl<T>(0)) {};
+struct is_iterable : public decltype(detail::is_iterable_impl<T>(0)) {};
 
 template <typename T>
 inline constexpr bool is_iterable_v = is_iterable<T>::value;

@@ -52,7 +52,8 @@ class Directory::iterator {
     m_read();
   }
   ~iterator() {
-    closedir(m_dp);
+    if (m_dp)
+      closedir(m_dp);
   }
 
   reference operator*() const {

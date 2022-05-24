@@ -1,8 +1,8 @@
 #ifndef GKXX_WHEEL_ALL_DIFFERENT_HPP
 #define GKXX_WHEEL_ALL_DIFFERENT_HPP
 
+#include <boost/mpl/and.hpp>
 #include <type_traits>
-#include <wheels/mpl/and.hpp>
 #include <wheels/mpl/different_from.hpp>
 
 namespace gkxx::mpl {
@@ -21,8 +21,9 @@ struct all_different<T1, T2> : different_from<T1, T2> {};
 
 template <typename T1, typename T2, typename... Ts>
 struct all_different<T1, T2, Ts...>
-    : and_<all_different<T2, Ts...>::value, all_different<T1, T2>::value,
-           all_different<T1, Ts...>::value> {};
+    : boost::mpl::and_<all_different<T2, Ts...>,
+                       all_different<T1, T2>,
+                       all_different<T1, Ts...>> {};
 
 template <typename... Ts>
 inline constexpr bool all_different_v = all_different<Ts...>::value;
