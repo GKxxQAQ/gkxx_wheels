@@ -6,8 +6,6 @@
 #include <iterator>
 #include <string>
 
-std::istream_iterator<int> eof;
-
 namespace gkxx {
 
 class Directory {
