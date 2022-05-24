@@ -9,10 +9,11 @@
 namespace gkxx {
 
 class Directory {
- private:
+ public:
   class iterator;
   using const_iterator = iterator;
 
+ private:
   std::string m_path;
 
  public:
