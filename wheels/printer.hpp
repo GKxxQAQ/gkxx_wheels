@@ -9,14 +9,13 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
-#include <wheels/mpl/all_different.hpp>
 
 namespace gkxx::printer {
 
 template <typename Real_printer>
-class __Printer_base;
+class Printer_base;
 
-namespace __arg_modifiers {
+namespace arg_modifiers {
 
   struct sep_arg_tag {};
   struct end_arg_tag {};
@@ -99,7 +98,7 @@ namespace __arg_modifiers {
   Arg_modifier<stream_arg_tag> stream;
   Arg_modifier<flush_arg_tag> flush;
 
-  namespace __details {
+  namespace detail {
 
     template <typename Want>
     inline constexpr const Want *optional_get() {
@@ -131,54 +130,81 @@ namespace __arg_modifiers {
           std::forward<T1>(first), std::forward<Others>(others)...);
     }
 
-  } // namespace __details
+  } // namespace detail
 
   template <typename Modifier, typename... Tags>
   inline constexpr auto
   get_value(const typename Modifier::value_type &default_val,
             const Arg_modifier<Tags> &...args) -> const
       typename Modifier::value_type & {
-    const Modifier *got = __details::optional_get<const Modifier>(args...);
+    const Modifier *got = detail::optional_get<const Modifier>(args...);
     return got ? got->value() : default_val;
   }
 
-} // namespace __arg_modifiers
+} // namespace arg_modifiers
 
-using __arg_modifiers::end;
-using __arg_modifiers::flush;
-using __arg_modifiers::sep;
-using __arg_modifiers::stream;
+using arg_modifiers::end;
+using arg_modifiers::flush;
+using arg_modifiers::sep;
+using arg_modifiers::stream;
+
+namespace detail {
+
+  template <typename... Things>
+  struct all_different;
+
+  template <>
+  struct all_different<> : std::true_type {};
+
+  template <typename Only>
+  struct all_different<Only> : std::true_type {};
+
+  template <typename First, typename Second>
+  struct all_different<First, Second>
+      : std::bool_constant<!std::is_same_v<First, Second>> {};
+
+  template <typename First, typename Second, typename... Rest>
+  struct all_different<First, Second, Rest...>
+      : std::bool_constant<all_different<Second, Rest...>::value &&
+                           !std::is_same_v<First, Second> &&
+                           !(std::is_same_v<First, Rest> || ...)> {};
+
+  template <typename... Things>
+  static constexpr bool all_different_v = all_different<Things...>::value;
+
+} // namespace detail
 
 // CRTP
 template <typename Real_printer>
-class __Printer_base {
+class Printer_base {
  protected:
   std::ostream *ostrm;
   std::string delim, ending;
   bool to_flush;
 
   template <typename Arg_tag>
-  using arg_modifier = __arg_modifiers::Arg_modifier<Arg_tag>;
+  using arg_modifier = arg_modifiers::Arg_modifier<Arg_tag>;
 
-  using sep_modifier = arg_modifier<__arg_modifiers::sep_arg_tag>;
-  using end_modifier = arg_modifier<__arg_modifiers::end_arg_tag>;
-  using stream_modifier = arg_modifier<__arg_modifiers::stream_arg_tag>;
-  using flush_modifier = arg_modifier<__arg_modifiers::flush_arg_tag>;
+  using sep_modifier = arg_modifier<arg_modifiers::sep_arg_tag>;
+  using end_modifier = arg_modifier<arg_modifiers::end_arg_tag>;
+  using stream_modifier = arg_modifier<arg_modifiers::stream_arg_tag>;
+  using flush_modifier = arg_modifier<arg_modifiers::flush_arg_tag>;
 
  public:
   template <typename... Tags>
-  __Printer_base(const arg_modifier<Tags> &...args)
-      : ostrm(__arg_modifiers::get_value<stream_modifier>(&std::cout, args...)),
-        delim(__arg_modifiers::get_value<sep_modifier>(" ", args...)),
-        ending(__arg_modifiers::get_value<end_modifier>("\n", args...)),
-        to_flush(__arg_modifiers::get_value<flush_modifier>(false, args...)) {
-    static_assert(mpl::all_different_v<Tags...>, "Printer arguments repeated!");
+  Printer_base(const arg_modifier<Tags> &...args)
+      : ostrm(arg_modifiers::get_value<stream_modifier>(&std::cout, args...)),
+        delim(arg_modifiers::get_value<sep_modifier>(" ", args...)),
+        ending(arg_modifiers::get_value<end_modifier>("\n", args...)),
+        to_flush(arg_modifiers::get_value<flush_modifier>(false, args...)) {
+    static_assert(detail::all_different_v<Tags...>,
+                  "Printer arguments repeated!");
   }
 
-  virtual ~__Printer_base() = default;
+  virtual ~Printer_base() = default;
 
   // The following member functions use static_cast to do downcasting.
-  // It is ensured that Real_printer is derived from __Printer_base,
+  // It is ensured that Real_printer is derived from Printer_base,
   // and therefore the downcasting is always safe.
 
   Real_printer &sep(const std::string &sep_) {
@@ -210,8 +236,8 @@ class __Printer_base {
   }
 };
 
-class Printer : public __Printer_base<Printer> {
-  using __Printer_base::__Printer_base; // public
+class Printer : public Printer_base<Printer> {
+  using Printer_base::Printer_base; // public
 
  private:
   template <typename T>
@@ -254,7 +280,7 @@ class Printer : public __Printer_base<Printer> {
 
 // sequence printer
 
-namespace __tuple_helper {
+namespace tuple_helper {
 
   template <std::size_t cur, typename... Ts>
   struct print_tuple {
@@ -279,11 +305,11 @@ namespace __tuple_helper {
                     const std::string &) const {}
   };
 
-} // namespace __tuple_helper
+} // namespace tuple_helper
 
 class Seq_printer;
 
-namespace __arg_modifiers {
+namespace arg_modifiers {
 
   struct left_arg_tag {};
   struct right_arg_tag {};
@@ -333,17 +359,17 @@ namespace __arg_modifiers {
   Arg_modifier<left_arg_tag> left;
   Arg_modifier<right_arg_tag> right;
 
-} // namespace __arg_modifiers
+} // namespace arg_modifiers
 
-using __arg_modifiers::left;
-using __arg_modifiers::right;
+using arg_modifiers::left;
+using arg_modifiers::right;
 
-class Seq_printer : public __Printer_base<Seq_printer> {
+class Seq_printer : public Printer_base<Seq_printer> {
  private:
   std::optional<std::string> left_brac, right_brac;
 
-  using left_modifier = arg_modifier<__arg_modifiers::left_arg_tag>;
-  using right_modifier = arg_modifier<__arg_modifiers::right_arg_tag>;
+  using left_modifier = arg_modifier<arg_modifiers::left_arg_tag>;
+  using right_modifier = arg_modifier<arg_modifiers::right_arg_tag>;
 
   template <typename Input_iter>
   void print_iter_range(Input_iter begin_, Input_iter end_) const {
@@ -360,7 +386,7 @@ class Seq_printer : public __Printer_base<Seq_printer> {
   }
   template <typename... Ts>
   void do_print(const std::tuple<Ts...> &t) const {
-    using helper = __tuple_helper::print_tuple<sizeof...(Ts) - 1, Ts...>;
+    using helper = tuple_helper::print_tuple<sizeof...(Ts) - 1, Ts...>;
     *ostrm << left_brac.value_or("(");
     helper()(t, *ostrm, delim);
     *ostrm << right_brac.value_or(")") << ending;
@@ -425,11 +451,11 @@ class Seq_printer : public __Printer_base<Seq_printer> {
  public:
   template <typename... Tags>
   Seq_printer(const arg_modifier<Tags> &...args)
-      : __Printer_base(args...),
+      : Printer_base(args...),
         left_brac(
-            __arg_modifiers::get_value<left_modifier>(std::nullopt, args...)),
-        right_brac(__arg_modifiers::get_value<right_modifier>(std::nullopt,
-                                                              args...)) {}
+            arg_modifiers::get_value<left_modifier>(std::nullopt, args...)),
+        right_brac(
+            arg_modifiers::get_value<right_modifier>(std::nullopt, args...)) {}
 
   // In particular, call to left/right without arguments provided will reset
   // left_brac/right_brac to default values.

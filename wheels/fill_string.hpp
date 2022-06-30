@@ -6,7 +6,7 @@
 
 namespace gkxx {
 
-namespace __details {
+namespace detail {
 
   using std::to_string;
 
@@ -25,7 +25,7 @@ namespace __details {
     return s;
   }
 
-} // namespace __details
+} // namespace detail
 
 std::string fill_string(const char *s) {
   return s;
@@ -38,7 +38,7 @@ std::string fill_string(const char *str, T &&t, Args &&...args) {
     ++s;
   if (*s) {
     if (*(s + 1) != '%')
-      return std::string(str, s) + __details::to_string(t) +
+      return std::string(str, s) + detail::to_string(t) +
              fill_string(s + 1, std::forward<Args>(args)...);
     else
       return std::string(str, s + 1) + fill_string(s + 2, std::forward<T>(t),

@@ -89,7 +89,7 @@ inline std::string join(char sep, std::initializer_list<std::string> chars) {
   return join<std::initializer_list<std::string>>(sep, chars);
 }
 
-namespace __kmp {
+namespace kmp {
 
   std::vector<int> get_kmp_next(const std::string &pattern) {
     std::vector<int> next(pattern.size(), 0);
@@ -149,12 +149,12 @@ namespace __kmp {
     return result;
   }
 
-} // namespace __kmp
+} // namespace kmp
 
 std::vector<std::string> split_by_kmp(const std::string &str,
                                       const std::string &delim) {
   using size_type = std::string::size_type;
-  auto match = __kmp::kmp_match_no_overlap(str, delim);
+  auto match = kmp::kmp_match_no_overlap(str, delim);
   if (match.empty())
     return std::vector<std::string>(1, str);
   std::vector<std::string> result;
@@ -193,7 +193,7 @@ std::string replace_by_kmp(const std::string &str, const std::string &old,
                            const std::string &new_,
                            std::string::size_type max_replace = -1) {
   using size_type = std::string::size_type;
-  auto match = __kmp::kmp_match_no_overlap(str, old);
+  auto match = kmp::kmp_match_no_overlap(str, old);
   std::string result;
   size_type cnt = 0, begin_pos = 0;
   for (auto end_pos : match) {
